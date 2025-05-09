@@ -77,6 +77,16 @@ pub struct WinitPlugin<T: Event = WakeUp> {
     /// Only works on Linux (X11/Wayland) and Windows.
     /// This field is ignored on other platforms.
     pub run_on_any_thread: bool,
+
+    /// Allows the window to be created without taking focus if another application
+    /// already has focus.
+    ///
+    /// # Supported platforms
+    ///
+    /// Only works on macOS.
+    /// This field is ignored on other platforms.
+    pub activate_without_focus: bool,
+
     marker: PhantomData<T>,
 }
 
@@ -118,6 +128,12 @@ impl<T: Event> Plugin for WinitPlugin<T> {
             use winit::platform::android::EventLoopBuilderExtAndroid;
             let msg = "Bevy must be setup with the #[bevy_main] macro on Android";
             event_loop_builder.with_android_app(bevy_window::ANDROID_APP.get().expect(msg).clone());
+        }
+
+        #[cfg(target_os = "macos")]
+        {
+            use winit::platform::macos::EventLoopBuilderExtMacOS;
+            event_loop_builder.with_activate_ignoring_other_apps(!self.activate_without_focus);
         }
 
         let event_loop = event_loop_builder
